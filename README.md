@@ -32,7 +32,7 @@ GitHub does not allow you to use your regular password when logging in via RStud
 usethis::create_github_token()
 
 2. Log in to GitHub if asked.
-3. Give your token a name (e.g., "STA302-Project"), leave all the pre-checked boxes exactly as they are, and click Generate token at the bottom.
+3. Give your token a name (e.g., "STA313-Project"), leave all the pre-checked boxes exactly as they are, and click Generate token at the bottom.
 4. Important: Copy the long string of letters/numbers immediately. You will never see it again.
 
 Step 5: Save Your Token in RStudio
