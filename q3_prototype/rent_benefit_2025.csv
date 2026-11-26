@@ -1,0 +1,91 @@
+year,effective_date,program,household_type,basic_needs,max_shelter,max_ocb,monthly_benefit,total_with_ocb,bedroom_type,cma,median_rent,reliability,rent_burden_pct,monthly_rent_gap
+2025,7/1/2025,ODSP,Couple - 2 children,1166,1105,287.82,2271,2558.82,3 Bedroom +,Barrie,2000,Very good,88.06693087,-271
+2025,7/1/2025,ODSP,Single,809,599,0,1408,1408,1 Bedroom,Barrie,1594,Very good,113.2102273,186
+2025,7/1/2025,ODSP,Single parent - 1 child,952,941,143.91,1893,2036.91,2 Bedroom,Barrie,1738,Excellent,91.81193872,-155
+2025,7/1/2025,OW,Couple - 2 children,494,756,287.82,1250,1537.82,3 Bedroom +,Barrie,2000,Very good,160,750
+2025,7/1/2025,OW,Single,343,390,0,733,733,1 Bedroom,Barrie,1594,Very good,217.4624829,861
+2025,7/1/2025,OW,Single parent - 1 child,360,642,143.91,1002,1145.91,2 Bedroom,Barrie,1738,Excellent,173.4530938,736
+2025,7/1/2025,ODSP,Couple - 2 children,1166,1105,287.82,2271,2558.82,3 Bedroom +,Brantford,1592,Excellent,70.10127697,-679
+2025,7/1/2025,ODSP,Single,809,599,0,1408,1408,1 Bedroom,Brantford,1408,Excellent,100,0
+2025,7/1/2025,ODSP,Single parent - 1 child,952,941,143.91,1893,2036.91,2 Bedroom,Brantford,1550,Very good,81.88061278,-343
+2025,7/1/2025,OW,Couple - 2 children,494,756,287.82,1250,1537.82,3 Bedroom +,Brantford,1592,Excellent,127.36,342
+2025,7/1/2025,OW,Single,343,390,0,733,733,1 Bedroom,Brantford,1408,Excellent,192.0873124,675
+2025,7/1/2025,OW,Single parent - 1 child,360,642,143.91,1002,1145.91,2 Bedroom,Brantford,1550,Very good,154.6906188,548
+2025,7/1/2025,ODSP,Couple - 2 children,1166,1105,287.82,2271,2558.82,3 Bedroom +,Greater Sudbury,1850,Very good,81.46191105,-421
+2025,7/1/2025,ODSP,Single,809,599,0,1408,1408,1 Bedroom,Greater Sudbury,1300,Excellent,92.32954545,-108
+2025,7/1/2025,ODSP,Single parent - 1 child,952,941,143.91,1893,2036.91,2 Bedroom,Greater Sudbury,1625,Very good,85.84257792,-268
+2025,7/1/2025,OW,Couple - 2 children,494,756,287.82,1250,1537.82,3 Bedroom +,Greater Sudbury,1850,Very good,148,600
+2025,7/1/2025,OW,Single,343,390,0,733,733,1 Bedroom,Greater Sudbury,1300,Excellent,177.3533424,567
+2025,7/1/2025,OW,Single parent - 1 child,360,642,143.91,1002,1145.91,2 Bedroom,Greater Sudbury,1625,Very good,162.1756487,623
+2025,7/1/2025,ODSP,Couple - 2 children,1166,1105,287.82,2271,2558.82,3 Bedroom +,Guelph,2035,Very good,89.60810216,-236
+2025,7/1/2025,ODSP,Single,809,599,0,1408,1408,1 Bedroom,Guelph,1691,Excellent,120.0994318,283
+2025,7/1/2025,ODSP,Single parent - 1 child,952,941,143.91,1893,2036.91,2 Bedroom,Guelph,1740,Excellent,91.91759113,-153
+2025,7/1/2025,OW,Couple - 2 children,494,756,287.82,1250,1537.82,3 Bedroom +,Guelph,2035,Very good,162.8,785
+2025,7/1/2025,OW,Single,343,390,0,733,733,1 Bedroom,Guelph,1691,Excellent,230.6957708,958
+2025,7/1/2025,OW,Single parent - 1 child,360,642,143.91,1002,1145.91,2 Bedroom,Guelph,1740,Excellent,173.6526946,738
+2025,7/1/2025,ODSP,Couple - 2 children,1166,1105,287.82,2271,2558.82,3 Bedroom +,Hamilton,1700,Excellent,74.85689124,-571
+2025,7/1/2025,ODSP,Single,809,599,0,1408,1408,1 Bedroom,Hamilton,1380,Excellent,98.01136364,-28
+2025,7/1/2025,ODSP,Single parent - 1 child,952,941,143.91,1893,2036.91,2 Bedroom,Hamilton,1538,Excellent,81.24669836,-355
+2025,7/1/2025,OW,Couple - 2 children,494,756,287.82,1250,1537.82,3 Bedroom +,Hamilton,1700,Excellent,136,450
+2025,7/1/2025,OW,Single,343,390,0,733,733,1 Bedroom,Hamilton,1380,Excellent,188.2673943,647
+2025,7/1/2025,OW,Single parent - 1 child,360,642,143.91,1002,1145.91,2 Bedroom,Hamilton,1538,Excellent,153.493014,536
+2025,7/1/2025,ODSP,Couple - 2 children,1166,1105,287.82,2271,2558.82,3 Bedroom +,Kingston,2495,Good,109.8634963,224
+2025,7/1/2025,ODSP,Single,809,599,0,1408,1408,1 Bedroom,Kingston,1500,Excellent,106.5340909,92
+2025,7/1/2025,ODSP,Single parent - 1 child,952,941,143.91,1893,2036.91,2 Bedroom,Kingston,1720,Excellent,90.86106709,-173
+2025,7/1/2025,OW,Couple - 2 children,494,756,287.82,1250,1537.82,3 Bedroom +,Kingston,2495,Good,199.6,1245
+2025,7/1/2025,OW,Single,343,390,0,733,733,1 Bedroom,Kingston,1500,Excellent,204.638472,767
+2025,7/1/2025,OW,Single parent - 1 child,360,642,143.91,1002,1145.91,2 Bedroom,Kingston,1720,Excellent,171.6566866,718
+2025,7/1/2025,ODSP,Couple - 2 children,1166,1105,287.82,2271,2558.82,3 Bedroom +,Kitchener-Cambridge-Waterloo,1900,Good,83.66358432,-371
+2025,7/1/2025,ODSP,Single,809,599,0,1408,1408,1 Bedroom,Kitchener-Cambridge-Waterloo,1599,Excellent,113.5653409,191
+2025,7/1/2025,ODSP,Single parent - 1 child,952,941,143.91,1893,2036.91,2 Bedroom,Kitchener-Cambridge-Waterloo,1860,Excellent,98.25673534,-33
+2025,7/1/2025,OW,Couple - 2 children,494,756,287.82,1250,1537.82,3 Bedroom +,Kitchener-Cambridge-Waterloo,1900,Good,152,650
+2025,7/1/2025,OW,Single,343,390,0,733,733,1 Bedroom,Kitchener-Cambridge-Waterloo,1599,Excellent,218.1446112,866
+2025,7/1/2025,OW,Single parent - 1 child,360,642,143.91,1002,1145.91,2 Bedroom,Kitchener-Cambridge-Waterloo,1860,Excellent,185.6287425,858
+2025,7/1/2025,ODSP,Couple - 2 children,1166,1105,287.82,2271,2558.82,3 Bedroom +,London,1928,Very good,84.89652136,-343
+2025,7/1/2025,ODSP,Single,809,599,0,1408,1408,1 Bedroom,London,1400,Excellent,99.43181818,-8
+2025,7/1/2025,ODSP,Single parent - 1 child,952,941,143.91,1893,2036.91,2 Bedroom,London,1640,Excellent,86.63497095,-253
+2025,7/1/2025,OW,Couple - 2 children,494,756,287.82,1250,1537.82,3 Bedroom +,London,1928,Very good,154.24,678
+2025,7/1/2025,OW,Single,343,390,0,733,733,1 Bedroom,London,1400,Excellent,190.9959072,667
+2025,7/1/2025,OW,Single parent - 1 child,360,642,143.91,1002,1145.91,2 Bedroom,London,1640,Excellent,163.6726547,638
+2025,7/1/2025,ODSP,Couple - 2 children,1166,1105,287.82,2271,2558.82,3 Bedroom +,Oshawa,1976,Very good,87.0101277,-295
+2025,7/1/2025,ODSP,Single,809,599,0,1408,1408,1 Bedroom,Oshawa,1600,Very good,113.6363636,192
+2025,7/1/2025,ODSP,Single parent - 1 child,952,941,143.91,1893,2036.91,2 Bedroom,Oshawa,1820,Excellent,96.14368727,-73
+2025,7/1/2025,OW,Couple - 2 children,494,756,287.82,1250,1537.82,3 Bedroom +,Oshawa,1976,Very good,158.08,726
+2025,7/1/2025,OW,Single,343,390,0,733,733,1 Bedroom,Oshawa,1600,Very good,218.2810368,867
+2025,7/1/2025,OW,Single parent - 1 child,360,642,143.91,1002,1145.91,2 Bedroom,Oshawa,1820,Excellent,181.6367265,818
+2025,7/1/2025,ODSP,Couple - 2 children,1166,1105,287.82,2271,2558.82,3 Bedroom +,Ottawa,2157,Excellent,94.98018494,-114
+2025,7/1/2025,ODSP,Single,809,599,0,1408,1408,1 Bedroom,Ottawa,1580,Excellent,112.2159091,172
+2025,7/1/2025,ODSP,Single parent - 1 child,952,941,143.91,1893,2036.91,2 Bedroom,Ottawa,1840,Excellent,97.2002113,-53
+2025,7/1/2025,OW,Couple - 2 children,494,756,287.82,1250,1537.82,3 Bedroom +,Ottawa,2157,Excellent,172.56,907
+2025,7/1/2025,OW,Single,343,390,0,733,733,1 Bedroom,Ottawa,1580,Excellent,215.5525239,847
+2025,7/1/2025,OW,Single parent - 1 child,360,642,143.91,1002,1145.91,2 Bedroom,Ottawa,1840,Excellent,183.6327345,838
+2025,7/1/2025,ODSP,Couple - 2 children,1166,1105,287.82,2271,2558.82,3 Bedroom +,Peterborough,1700,Very good,74.85689124,-571
+2025,7/1/2025,ODSP,Single,809,599,0,1408,1408,1 Bedroom,Peterborough,1200,Excellent,85.22727273,-208
+2025,7/1/2025,ODSP,Single parent - 1 child,952,941,143.91,1893,2036.91,2 Bedroom,Peterborough,1478,Excellent,78.07712625,-415
+2025,7/1/2025,OW,Couple - 2 children,494,756,287.82,1250,1537.82,3 Bedroom +,Peterborough,1700,Very good,136,450
+2025,7/1/2025,OW,Single,343,390,0,733,733,1 Bedroom,Peterborough,1200,Excellent,163.7107776,467
+2025,7/1/2025,OW,Single parent - 1 child,360,642,143.91,1002,1145.91,2 Bedroom,Peterborough,1478,Excellent,147.50499,476
+2025,7/1/2025,ODSP,Couple - 2 children,1166,1105,287.82,2271,2558.82,3 Bedroom +,St. Catharines-Niagara,1630,Fair (Use with Caution),71.77454866,-641
+2025,7/1/2025,ODSP,Single,809,599,0,1408,1408,1 Bedroom,St. Catharines-Niagara,1226,Excellent,87.07386364,-182
+2025,7/1/2025,ODSP,Single parent - 1 child,952,941,143.91,1893,2036.91,2 Bedroom,St. Catharines-Niagara,1494,Excellent,78.92234548,-399
+2025,7/1/2025,OW,Couple - 2 children,494,756,287.82,1250,1537.82,3 Bedroom +,St. Catharines-Niagara,1630,Fair (Use with Caution),130.4,380
+2025,7/1/2025,OW,Single,343,390,0,733,733,1 Bedroom,St. Catharines-Niagara,1226,Excellent,167.2578445,493
+2025,7/1/2025,OW,Single parent - 1 child,360,642,143.91,1002,1145.91,2 Bedroom,St. Catharines-Niagara,1494,Excellent,149.1017964,492
+2025,7/1/2025,ODSP,Couple - 2 children,1166,1105,287.82,2271,2558.82,3 Bedroom +,Thunder Bay,1950,Very good,85.8652576,-321
+2025,7/1/2025,ODSP,Single,809,599,0,1408,1408,1 Bedroom,Thunder Bay,1158,Very good,82.24431818,-250
+2025,7/1/2025,ODSP,Single parent - 1 child,952,941,143.91,1893,2036.91,2 Bedroom,Thunder Bay,1451,Excellent,76.65081881,-442
+2025,7/1/2025,OW,Couple - 2 children,494,756,287.82,1250,1537.82,3 Bedroom +,Thunder Bay,1950,Very good,156,700
+2025,7/1/2025,OW,Single,343,390,0,733,733,1 Bedroom,Thunder Bay,1158,Very good,157.9809004,425
+2025,7/1/2025,OW,Single parent - 1 child,360,642,143.91,1002,1145.91,2 Bedroom,Thunder Bay,1451,Excellent,144.8103792,449
+2025,7/1/2025,ODSP,Couple - 2 children,1166,1105,287.82,2271,2558.82,3 Bedroom +,Toronto,2177,Excellent,95.86085425,-94
+2025,7/1/2025,ODSP,Single,809,599,0,1408,1408,1 Bedroom,Toronto,1780,Excellent,126.4204545,372
+2025,7/1/2025,ODSP,Single parent - 1 child,952,941,143.91,1893,2036.91,2 Bedroom,Toronto,2000,Excellent,105.6524036,107
+2025,7/1/2025,OW,Couple - 2 children,494,756,287.82,1250,1537.82,3 Bedroom +,Toronto,2177,Excellent,174.16,927
+2025,7/1/2025,OW,Single,343,390,0,733,733,1 Bedroom,Toronto,1780,Excellent,242.8376535,1047
+2025,7/1/2025,OW,Single parent - 1 child,360,642,143.91,1002,1145.91,2 Bedroom,Toronto,2000,Excellent,199.6007984,998
+2025,7/1/2025,ODSP,Couple - 2 children,1166,1105,287.82,2271,2558.82,3 Bedroom +,Windsor,NA,NA,NA,NA
+2025,7/1/2025,ODSP,Single,809,599,0,1408,1408,1 Bedroom,Windsor,1177,Excellent,83.59375,-231
+2025,7/1/2025,ODSP,Single parent - 1 child,952,941,143.91,1893,2036.91,2 Bedroom,Windsor,1400,Excellent,73.95668251,-493
+2025,7/1/2025,OW,Couple - 2 children,494,756,287.82,1250,1537.82,3 Bedroom +,Windsor,NA,NA,NA,NA
+2025,7/1/2025,OW,Single,343,390,0,733,733,1 Bedroom,Windsor,1177,Excellent,160.5729877,444
+2025,7/1/2025,OW,Single parent - 1 child,360,642,143.91,1002,1145.91,2 Bedroom,Windsor,1400,Excellent,139.7205589,398
