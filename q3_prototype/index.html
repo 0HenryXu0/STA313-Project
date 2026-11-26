@@ -1,0 +1,917 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Where Is the Rent Burden Worst? — Q3</title>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+    <style>
+        :root {
+            --paper: #f7f6f0;
+            --panel: #fffefa;
+            --ink: #202a2a;
+            --muted: #687574;
+            --line: #dfe4de;
+            --ow: #b9653e;
+            --odsp: #347b88;
+            --teal: #47736d;
+            --threshold: #a86a4c;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            overflow: hidden;
+            background: var(--paper);
+            color: var(--ink);
+            font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app {
+            width: 100%;
+            height: 100vh;
+            height: 100svh;
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
+            padding: 15px clamp(14px, 2.2vw, 32px) 13px;
+            overflow: hidden;
+        }
+
+        .topbar {
+            flex: 0 0 auto;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding-bottom: 11px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .title-wrap {
+            min-width: 0;
+        }
+
+        .eyebrow {
+            color: var(--teal);
+            font-size: 8px;
+            font-weight: 850;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+
+        h1 {
+            margin: 0;
+            font: 500 clamp(21px, 2.2vw, 29px)/1.05 Georgia, serif;
+            letter-spacing: -.035em;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .view-buttons {
+            display: flex;
+            gap: 5px;
+            padding: 3px;
+            background: #eeeee7;
+            border-radius: 8px;
+        }
+
+        .view-btn,
+        select {
+            min-height: 32px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            background: transparent;
+            color: #42514f;
+            padding: 6px 11px;
+            font: inherit;
+            font-size: 10px;
+            font-weight: 750;
+        }
+
+        .view-btn {
+            cursor: pointer;
+        }
+
+        .view-btn[aria-pressed="true"] {
+            color: white;
+            background: var(--ink);
+        }
+
+        select {
+            min-width: 220px;
+            border-color: #cbd4ce;
+            background: var(--panel);
+            cursor: pointer;
+        }
+
+        .view-btn:focus-visible,
+        select:focus-visible {
+            outline: 2px solid var(--teal);
+            outline-offset: 2px;
+        }
+
+        .legend {
+            flex: 0 0 auto;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+            gap: 17px;
+            padding: 4px 2px 5px;
+            color: #65716c;
+            font-size: 9px;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .swatch {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .swatch.ow {
+            background: var(--ow);
+        }
+
+        .swatch.odsp {
+            background: var(--odsp);
+        }
+
+        .threshold-key {
+            width: 19px;
+            height: 0;
+            border-top: 1.5px dashed var(--threshold);
+            display: inline-block;
+        }
+
+        .stage {
+            flex: 1 1 auto;
+            min-height: 0;
+            position: relative;
+        }
+
+        .view-panel {
+            position: absolute;
+            inset: 0;
+            min-width: 0;
+            min-height: 0;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .view-panel[hidden] {
+            display: none;
+        }
+
+        #dotPlot,
+        #map {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #dotPlot {
+            overflow: visible;
+        }
+
+        .map-base {
+            fill: #e9eee7;
+            stroke: #c8d1c8;
+            stroke-width: 1.1;
+        }
+
+        .map-leader {
+            stroke: #75827b;
+            stroke-width: .85;
+            opacity: .8;
+        }
+
+        .map-marker {
+            cursor: crosshair;
+        }
+
+        .map-marker .ow-dot {
+            fill: var(--ow);
+            stroke: var(--panel);
+            stroke-width: 1.4;
+        }
+
+        .map-marker .odsp-dot {
+            fill: var(--odsp);
+            stroke: var(--panel);
+            stroke-width: 1.4;
+        }
+
+        .map-marker:hover circle,
+        .map-marker:focus circle {
+            stroke: #202a2a;
+            stroke-width: 2;
+        }
+
+        .tooltip {
+            position: fixed;
+            z-index: 30;
+            max-width: 265px;
+            padding: 9px 11px;
+            border-radius: 7px;
+            background: #1f2c29;
+            color: #f8f8f1;
+            font-size: 10px;
+            line-height: 1.5;
+            pointer-events: none;
+            opacity: 0;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, .16);
+        }
+
+        .tooltip strong {
+            color: white;
+            font-size: 11px;
+        }
+
+        .error-state {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            max-width: min(520px, 85%);
+            color: #8b473a;
+            font-size: 12px;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        @media(max-width:700px) {
+            .app {
+                padding: 10px 9px;
+            }
+
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 9px;
+            }
+
+            .controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            select {
+                min-width: 0;
+                flex: 1;
+            }
+
+            .legend {
+                gap: 11px;
+                font-size: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <header class="topbar">
+            <div class="title-wrap">
+                <div class="eyebrow">Q3 · Ontario · 2025</div>
+                <h1>Where is the rent burden worst?</h1>
+            </div>
+            <div class="controls">
+                <div class="view-buttons" role="group" aria-label="Choose visualization">
+                    <button class="view-btn" id="dotViewButton" type="button" aria-pressed="true">Dot plot</button>
+                    <button class="view-btn" id="mapViewButton" type="button" aria-pressed="false">Map</button>
+                </div>
+                <select id="householdSelect" aria-label="Household type">
+                    <option value="single">Single · 1 bedroom</option>
+                    <option value="parent">Single parent + 1 child · 2 bedroom</option>
+                    <option value="couple">Couple + 2 children · 3+ bedroom</option>
+                </select>
+            </div>
+        </header>
+
+        <div class="legend" id="dotLegend">
+            <span class="legend-item"><i class="swatch ow"></i> OW</span>
+            <span class="legend-item"><i class="swatch odsp"></i> ODSP</span>
+            <span class="legend-item"><i class="threshold-key"></i> 100% of monthly benefit</span>
+        </div>
+
+        <main class="stage">
+            <section class="view-panel" id="dotPanel">
+                <svg id="dotPlot" role="img" aria-label="Rent burden by Ontario city and benefit program"></svg>
+            </section>
+            <section class="view-panel" id="mapPanel" hidden>
+                <svg id="map" viewBox="0 0 1000 650" role="img"
+                    aria-label="Ontario city locations with OW and ODSP rent burden markers"></svg>
+                <div id="mapError" class="error-state" hidden></div>
+            </section>
+        </main>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        (() => {
+            const CSV_FILE = "rent_benefit_2025.csv";
+
+            const ONTARIO_GEOJSON_URLS = [
+                "https://cdn.jsdelivr.net/gh/codeforgermany/click_that_hood@main/public/data/canada.geojson",
+                "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/canada.geojson"
+            ];
+
+            const MAP_W = 1000, MAP_H = 650;
+            const COLORS = { OW: "#b9653e", ODSP: "#347b88" };
+
+            const state = {
+                rows: [],
+                geo: null,
+                household: "single",
+                view: "dot",
+                anchors: []
+            };
+
+            const tooltip = d3.select("#tooltip");
+
+            const norm = value => String(value ?? "")
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/&/g, "and")
+                .replace(/[’']/g, "")
+                .replace(/[^a-z0-9]+/g, " ")
+                .trim();
+
+            const num = value => {
+                if (value == null || String(value).trim() === "" ||
+                    String(value).trim().toUpperCase() === "NA") return null;
+
+                const parsed = Number(String(value).replace(/[$,%\s,]/g, ""));
+                return Number.isFinite(parsed) ? parsed : null;
+            };
+
+            const fmtPct = value =>
+                value == null ? "NA" : `${d3.format(".0f")(value)}%`;
+
+            const fmtMoney = value =>
+                value == null ? "NA" : d3.format("$,.0f")(value);
+
+            function cityKey(value) {
+                const key = norm(value)
+                    .replace(/\b(cma|ontario)\b/g, " ")
+                    .replace(/\s+/g, " ")
+                    .trim();
+
+                if (key.includes("thunder bay")) return "thunder bay";
+                if (key.includes("sudbury")) return "greater sudbury";
+                if (key.includes("ottawa")) return "ottawa gatineau";
+                if (key.includes("belleville")) return "belleville quinte west";
+                if (key.includes("st catharines") || key.includes("niagara"))
+                    return "st catharines niagara";
+                if (key.includes("kitchener") || key.includes("waterloo"))
+                    return "kitchener cambridge waterloo";
+
+                return key;
+            }
+
+            function cityLabel(value) {
+                const names = {
+                    "thunder bay": "Thunder Bay",
+                    "greater sudbury": "Greater Sudbury",
+                    "ottawa gatineau": "Ottawa–Gatineau",
+                    "belleville quinte west": "Belleville–Quinte West",
+                    "st catharines niagara": "St. Catharines–Niagara",
+                    "kitchener cambridge waterloo": "Kitchener–Cambridge–Waterloo"
+                };
+
+                const key = cityKey(value);
+                return names[key] || String(value).replace(/\s+CMA\s*$/i, "").trim();
+            }
+
+            function householdKey(value) {
+                const key = norm(value);
+
+                if (key.includes("parent") ||
+                    (key.includes("child") && !key.includes("couple")))
+                    return "parent";
+
+                if (key.includes("couple") ||
+                    key.includes("two children") ||
+                    key.includes("2 children"))
+                    return "couple";
+
+                if (key.includes("single")) return "single";
+                return null;
+            }
+
+            function parseRows(raw) {
+                if (!raw.length) throw new Error("The CSV contains no data rows.");
+
+                const required = ["cma", "program", "household_type"];
+                const missing = required.filter(key => !(key in raw[0]));
+
+                if (missing.length)
+                    throw new Error(`Missing CSV columns: ${missing.join(", ")}`);
+
+                return raw.map(d => {
+                    const rent = num(d.median_rent);
+                    const basic = num(d.basic_needs);
+                    const shelter = num(d.max_shelter);
+
+                    const benefit = num(d.monthly_benefit) ??
+                        (basic != null && shelter != null ? basic + shelter : null);
+
+                    let burden = num(d.rent_burden_pct);
+
+                    if (burden == null && rent != null && benefit != null && benefit > 0)
+                        burden = rent / benefit * 100;
+
+                    const gap = num(d.monthly_rent_gap) ??
+                        (rent != null && benefit != null ? rent - benefit : null);
+
+                    return {
+                        year: String(d.year ?? "2025"),
+                        cma: String(d.cma ?? "").trim(),
+                        key: cityKey(d.cma),
+                        label: cityLabel(d.cma),
+                        program: String(d.program ?? "").trim().toUpperCase(),
+                        household: householdKey(d.household_type),
+                        rent, benefit, burden, gap,
+                        reliability: String(d.reliability ?? "Not stated").trim() || "Not stated"
+                    };
+                }).filter(d =>
+                    d.cma && ["OW", "ODSP"].includes(d.program) && d.household
+                );
+            }
+
+            function householdRows() {
+                const selected = state.rows.filter(d =>
+                    (!d.year || d.year.includes("2025")) &&
+                    d.household === state.household
+                );
+
+                const grouped = d3.group(selected, d => d.key);
+
+                return Array.from(grouped, ([key, records]) => {
+                    const byProgram = Object.fromEntries(
+                        records.map(d => [d.program, d])
+                    );
+
+                    const values = [
+                        byProgram.OW?.burden,
+                        byProgram.ODSP?.burden
+                    ].filter(v => v != null);
+
+                    const ratings = [
+                        ...new Set(records.map(d => d.reliability).filter(Boolean))
+                    ];
+
+                    return {
+                        key,
+                        label: records[0].label,
+                        OW: byProgram.OW || null,
+                        ODSP: byProgram.ODSP || null,
+                        worst: values.length ? d3.max(values) : null,
+                        reliability: ratings.length ? ratings.join(" / ") : "Not stated"
+                    };
+                });
+            }
+
+            function escapeHtml(value) {
+                return String(value).replace(/[&<>"']/g, char => ({
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    "\"": "&quot;",
+                    "'": "&#39;"
+                }[char]));
+            }
+
+            function tooltipHtml(city, program = null) {
+                const programs = program ? [program] : ["OW", "ODSP"];
+
+                const parts = programs.map(name => {
+                    const record = city[name];
+
+                    if (!record)
+                        return `<div style="margin-top:5px"><b>${name}</b>: No record</div>`;
+
+                    return `
+        <div style="margin-top:5px">
+          <b style="color:${COLORS[name]}">${name}</b> · ${fmtPct(record.burden)}
+          <br>Median rent: ${fmtMoney(record.rent)}
+          <br>Maximum benefit: ${fmtMoney(record.benefit)}
+          <br>Monthly rent gap: ${fmtMoney(record.gap)}
+        </div>`;
+                }).join("");
+
+                return `
+      <strong>${escapeHtml(city.label)}</strong>
+      ${parts}
+      <div style="margin-top:6px;color:#bdc9c4">
+        CMHC reliability: ${escapeHtml(city.reliability)}
+      </div>`;
+            }
+
+            function showTooltip(event, city, program = null) {
+                tooltip.html(tooltipHtml(city, program)).style("opacity", 1);
+
+                const bounds = tooltip.node().getBoundingClientRect();
+
+                let left = event.clientX + 13;
+                let top = event.clientY + 13;
+
+                if (left + bounds.width + 8 > window.innerWidth)
+                    left = event.clientX - bounds.width - 13;
+
+                if (top + bounds.height + 8 > window.innerHeight)
+                    top = event.clientY - bounds.height - 13;
+
+                tooltip
+                    .style("left", `${Math.max(8, left)}px`)
+                    .style("top", `${Math.max(8, top)}px`);
+            }
+
+            function hideTooltip() {
+                tooltip.style("opacity", 0);
+            }
+
+            // DOT PLOT
+
+            function renderDotPlot() {
+                const cities = householdRows().sort((a, b) =>
+                    d3.descending(a.worst ?? -Infinity, b.worst ?? -Infinity) ||
+                    d3.ascending(a.label, b.label)
+                );
+
+                if (!cities.length)
+                    throw new Error("No data found for the selected household type.");
+
+                const svg = d3.select("#dotPlot");
+                svg.selectAll("*").remove();
+
+                const width = 1120;
+                const left = 230, right = 48;
+                const top = 53, rowH = 35, bottom = 25;
+                const height = top + cities.length * rowH + bottom;
+
+                const maxValue = d3.max(cities, d =>
+                    Math.max(d.OW?.burden ?? 0, d.ODSP?.burden ?? 0)
+                ) || 250;
+
+                const domainMax = Math.max(250, Math.ceil(maxValue / 50) * 50);
+
+                const x = d3.scaleLinear()
+                    .domain([0, domainMax])
+                    .range([left, width - right]);
+
+                const ticks = d3.range(0, domainMax + 1, 50);
+                const plotBottom = top + cities.length * rowH;
+
+                svg.attr("viewBox", `0 0 ${width} ${height}`)
+                    .attr("preserveAspectRatio", "xMidYMid meet");
+
+                svg.append("g")
+                    .selectAll("line.grid")
+                    .data(ticks)
+                    .join("line")
+                    .attr("x1", d => x(d))
+                    .attr("x2", d => x(d))
+                    .attr("y1", top - 8)
+                    .attr("y2", plotBottom)
+                    .attr("stroke", d => d === 100 ? "#b77a5c" : "#e7ebe6")
+                    .attr("stroke-width", d => d === 100 ? 1.5 : 1)
+                    .attr("stroke-dasharray", d => d === 100 ? "4 4" : null);
+
+                svg.append("g")
+                    .attr("transform", `translate(0,${top - 8})`)
+                    .call(
+                        d3.axisTop(x)
+                            .tickValues(ticks)
+                            .tickSize(0)
+                            .tickFormat(d => `${d}%`)
+                    )
+                    .call(g => g.select(".domain").remove())
+                    .call(g => g.selectAll("text")
+                        .attr("font-size", 10)
+                        .attr("fill", "#75817b")
+                        .attr("dy", -3)
+                    );
+
+                svg.append("text")
+                    .attr("x", x(100) + 5)
+                    .attr("y", top - 15)
+                    .attr("fill", "#a86a4c")
+                    .attr("font-size", 8)
+                    .attr("font-weight", 800)
+                    .text("100%");
+
+                const rows = svg.selectAll("g.city-row")
+                    .data(cities, d => d.key)
+                    .join("g")
+                    .attr("class", "city-row")
+                    .attr("transform", (d, i) => `translate(0,${top + i * rowH})`);
+
+                rows.filter((d, i) => i % 2 === 0)
+                    .append("rect")
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("width", width)
+                    .attr("height", rowH)
+                    .attr("fill", "#f8f8f3");
+
+                rows.append("line")
+                    .attr("x1", 0).attr("x2", width)
+                    .attr("y1", rowH).attr("y2", rowH)
+                    .attr("stroke", "#edf0eb");
+
+                // City names remain visible; numerical details appear on hover.
+                rows.append("text")
+                    .attr("x", 9)
+                    .attr("y", 21)
+                    .attr("fill", "#394843")
+                    .attr("font-size", 11)
+                    .attr("font-weight", 700)
+                    .style("cursor", "default")
+                    .text(d => d.label)
+                    .on("mousemove", (event, city) => showTooltip(event, city))
+                    .on("mouseleave", hideTooltip);
+
+                rows.each(function (city) {
+                    const row = d3.select(this);
+
+                    ["OW", "ODSP"].forEach((program, i) => {
+                        const record = city[program];
+                        if (!record || record.burden == null) return;
+
+                        const cx = x(record.burden);
+                        const cy = i === 0 ? 10 : 25;
+
+                        const dot = row.append("circle")
+                            .attr("cx", cx)
+                            .attr("cy", cy)
+                            .attr("r", 5)
+                            .attr("fill", COLORS[program])
+                            .attr("stroke", "#fffefa")
+                            .attr("stroke-width", 1.4)
+                            .style("cursor", "pointer")
+                            .on("mousemove", event =>
+                                showTooltip(event, city, program)
+                            )
+                            .on("mouseleave", hideTooltip);
+
+                        dot.append("title")
+                            .text(`${city.label} · ${program} · ${fmtPct(record.burden)}`);
+                    });
+                });
+            }
+
+            // Approximate city-centre coordinates (longitude, latitude).
+            // These are not CMA centroids.
+
+            const CITY_ANCHORS = {
+                "thunder bay": [-89.2477, 48.3809],
+                "greater sudbury": [-80.9930, 46.4917],
+                "ottawa gatineau": [-75.6972, 45.4215],
+                "barrie": [-79.6903, 44.3894],
+                "kingston": [-76.4860, 44.2312],
+                "peterborough": [-78.3197, 44.3091],
+                "belleville quinte west": [-77.3832, 44.1628],
+                "oshawa": [-78.8658, 43.8971],
+                "toronto": [-79.3832, 43.6532],
+                "st catharines niagara": [-79.2469, 43.1594],
+                "hamilton": [-79.8711, 43.2557],
+                "guelph": [-80.2497, 43.5448],
+                "kitchener cambridge waterloo": [-80.4925, 43.4516],
+                "brantford": [-80.2644, 43.1394],
+                "london": [-81.2453, 42.9849],
+                "windsor": [-83.0364, 42.3149]
+            };
+
+            async function loadOntarioOutline() {
+                let lastError = null;
+
+                for (const url of ONTARIO_GEOJSON_URLS) {
+                    try {
+                        const geo = await d3.json(url);
+
+                        const feature = geo?.features?.find(f =>
+                            norm(f.properties?.name ?? f.properties?.NAME) === "ontario"
+                        );
+
+                        if (!feature)
+                            throw new Error("Ontario was not found in the GeoJSON file.");
+
+                        return feature;
+                    } catch (error) {
+                        lastError = error;
+                    }
+                }
+
+                throw new Error(lastError?.message || "Could not load the Ontario outline.");
+            }
+
+            function drawOntarioBase() {
+                const svg = d3.select("#map");
+                svg.selectAll("*").remove();
+
+                const projection = d3.geoMercator()
+                    .fitExtent([[24, 20], [MAP_W - 24, MAP_H - 20]], state.geo);
+
+                const path = d3.geoPath(projection);
+
+                svg.append("path")
+                    .datum(state.geo)
+                    .attr("class", "map-base")
+                    .attr("d", path);
+
+                const csvKeys = new Set(state.rows.map(d => d.key));
+
+                state.anchors = Object.entries(CITY_ANCHORS)
+                    .filter(([key]) => csvKeys.has(key))
+                    .map(([key, coordinates]) => {
+                        const [anchorX, anchorY] = projection(coordinates);
+                        return { key, anchorX, anchorY };
+                    });
+
+                if (!state.anchors.length)
+                    throw new Error("No CSV cities matched the map locations.");
+            }
+
+            // MAP
+
+            function renderMap() {
+                const cities = householdRows();
+
+                if (!cities.length)
+                    throw new Error("No data found for the selected household type.");
+
+                const byKey = new Map(cities.map(city => [city.key, city]));
+
+                const nodes = state.anchors
+                    .map(anchor => ({ ...anchor, city: byKey.get(anchor.key) }))
+                    .filter(d => d.city);
+
+                // Prevent nearby city markers from overlapping.
+                const simulation = d3.forceSimulation(nodes)
+                    .force("x", d3.forceX(d => d.anchorX).strength(.38))
+                    .force("y", d3.forceY(d => d.anchorY).strength(.38))
+                    .force("collide", d3.forceCollide(10).iterations(3))
+                    .stop();
+
+                for (let i = 0; i < 200; i++) simulation.tick();
+
+                nodes.forEach(d => {
+                    d.x = Math.max(12, Math.min(MAP_W - 12, d.x));
+                    d.y = Math.max(12, Math.min(MAP_H - 12, d.y));
+                });
+
+                const svg = d3.select("#map");
+                svg.selectAll(".city-markers").remove();
+
+                const layer = svg.append("g")
+                    .attr("class", "city-markers");
+
+                layer.selectAll("line.map-leader")
+                    .data(nodes)
+                    .join("line")
+                    .attr("class", "map-leader")
+                    .attr("x1", d => d.anchorX)
+                    .attr("y1", d => d.anchorY)
+                    .attr("x2", d => d.x)
+                    .attr("y2", d => d.y);
+
+                const markers = layer.selectAll("g.map-marker")
+                    .data(nodes, d => d.key)
+                    .join("g")
+                    .attr("class", "map-marker")
+                    .attr("transform", d => `translate(${d.x},${d.y})`)
+                    .attr("tabindex", 0)
+                    .attr("role", "img")
+                    .attr("aria-label", d =>
+                        `${d.city.label}. OW ${fmtPct(d.city.OW?.burden)}. ODSP ${fmtPct(d.city.ODSP?.burden)}.`
+                    )
+                    .on("mousemove", (event, d) => showTooltip(event, d.city))
+                    .on("mouseleave", hideTooltip)
+                    .on("focus", (event, d) => {
+                        const rect = event.currentTarget.getBoundingClientRect();
+                        showTooltip(
+                            { clientX: rect.right, clientY: rect.top },
+                            d.city
+                        );
+                    })
+                    .on("blur", hideTooltip);
+
+                markers.append("circle")
+                    .attr("class", "ow-dot")
+                    .attr("cx", -4.5)
+                    .attr("r", 5.2);
+
+                markers.append("circle")
+                    .attr("class", "odsp-dot")
+                    .attr("cx", 4.5)
+                    .attr("r", 5.2);
+
+                markers.append("circle")
+                    .attr("r", 12)
+                    .attr("fill", "transparent")
+                    .attr("stroke", "none")
+                    .style("pointer-events", "all");
+            }
+
+            function setView(view) {
+                state.view = view;
+                const isDot = view === "dot";
+
+                document.querySelector("#dotPanel").hidden = !isDot;
+                document.querySelector("#mapPanel").hidden = isDot;
+                document.querySelector("#dotLegend").hidden = !isDot;
+
+                document.querySelector("#dotViewButton")
+                    .setAttribute("aria-pressed", String(isDot));
+
+                document.querySelector("#mapViewButton")
+                    .setAttribute("aria-pressed", String(!isDot));
+
+                if (state.rows.length) {
+                    if (isDot) renderDotPlot();
+                    else if (state.geo) renderMap();
+                }
+
+                hideTooltip();
+            }
+
+            async function init() {
+                try {
+                    const raw = await d3.csv(CSV_FILE);
+                    state.rows = parseRows(raw);
+                    renderDotPlot();
+                } catch (error) {
+                    console.error(error);
+                    document.querySelector("#dotPanel").innerHTML = `
+        <div class="error-state">
+          Could not load ${CSV_FILE}. Keep the CSV beside this HTML file
+          and open the folder through a local server.
+        </div>`;
+                    return;
+                }
+
+                try {
+                    state.geo = await loadOntarioOutline();
+                    drawOntarioBase();
+
+                    if (state.view === "map") renderMap();
+                } catch (error) {
+                    console.error(error);
+                    document.querySelector("#mapError").hidden = false;
+                    document.querySelector("#mapError").textContent =
+                        "The map boundary could not load. Check your internet connection and refresh the page.";
+                }
+            }
+
+            document.querySelector("#dotViewButton")
+                .addEventListener("click", () => setView("dot"));
+
+            document.querySelector("#mapViewButton")
+                .addEventListener("click", () => setView("map"));
+
+            document.querySelector("#householdSelect")
+                .addEventListener("change", event => {
+                    state.household = event.target.value;
+                    if (!state.rows.length) return;
+
+                    if (state.view === "dot") renderDotPlot();
+                    else if (state.geo) renderMap();
+                });
+
+            init();
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Where is the rent burden worst? — Q3</title>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+    <style>
+        :root {
+            --paper: #fbfaf6;
+            --ink: #202a2a;
+            --muted: #687574;
+            --line: #dfe4de;
+            --ow: #b9653e;
+            --odsp: #347b88;
+            --threshold: #9f563d;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--paper);
+            color: var(--ink);
+            font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .page {
+            max-width: 1660px;
+            margin: 0 auto;
+            padding: 28px 34px 24px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 24px;
+            margin-bottom: 20px;
+        }
+
+        .eyebrow {
+            color: #47736d;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 7px 0 6px;
+            font: 500 clamp(30px, 3.3vw, 48px)/1 Georgia, serif;
+            letter-spacing: -.04em;
+        }
+
+        .subtitle {
+            margin: 0;
+            color: #586663;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .file-area {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+            min-width: 180px;
+        }
+
+        #loadState {
+            color: var(--muted);
+            font-size: 10px;
+            text-align: right;
+        }
+
+        #loadState.error {
+            color: #a33e34;
+        }
+
+        .legend {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin: 0 0 10px 2px;
+            color: #5d6965;
+            font-size: 11px;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .swatch {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .swatch.ow {
+            background: var(--ow);
+        }
+
+        .swatch.odsp {
+            background: var(--odsp);
+        }
+
+        .threshold-key {
+            width: 20px;
+            height: 0;
+            border-top: 1.5px dashed var(--threshold);
+            display: inline-block;
+        }
+
+        .chart-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        #chart {
+            display: block;
+            width: 100%;
+            min-width: 1120px;
+            height: auto;
+        }
+
+        .footnote {
+            border-top: 1px solid var(--line);
+            margin-top: 10px;
+            padding-top: 10px;
+            color: #65716c;
+            font-size: 10px;
+            line-height: 1.5;
+        }
+
+        .footnote strong {
+            color: #394843;
+        }
+
+        .loading {
+            height: 520px;
+            display: grid;
+            place-items: center;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        @media (max-width: 800px) {
+            .page {
+                padding: 20px 14px;
+            }
+
+            header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .file-area {
+                align-items: flex-start;
+            }
+
+            #loadState {
+                text-align: left;
+            }
+        }
+
+        @media print {
+            .file-area {
+                display: none;
+            }
+
+            body {
+                background: white;
+            }
+
+            .page {
+                max-width: none;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <header>
+            <div>
+                <div class="eyebrow">Q3 · Ontario rental affordability · 2025</div>
+                <h1>Where is the rent burden worst?</h1>
+                <p class="subtitle">Median monthly rent as a share of the maximum monthly OW or ODSP benefit · October
+                    2025 rents, July 2025 benefit rates</p>
+            </div>
+            <div class="file-area">
+                <div id="loadState">Loading rent_benefit_2025.csv…</div>
+            </div>
+        </header>
+
+        <div class="legend">
+            <span class="legend-item"><i class="swatch ow"></i> Ontario Works (OW)</span>
+            <span class="legend-item"><i class="swatch odsp"></i> ODSP</span>
+            <span class="legend-item"><i class="threshold-key"></i> 100% — rent equals the full benefit</span>
+        </div>
+
+        <div class="chart-wrap">
+            <svg id="chart" role="img"
+                aria-label="Three aligned dot plots comparing city rent burden for OW and ODSP across household types"></svg>
+            <div id="empty" class="loading">Loading rent_benefit_2025.csv…</div>
+        </div>
+
+        <div class="footnote">
+            <strong>Reading the chart:</strong> 100% means median rent uses the entire maximum monthly core benefit;
+            above 100% means rent exceeds it. Maximum benefit = basic needs + maximum shelter. Excludes the Ontario
+            Child Benefit, tax credits and other assistance. CMHC reliability ratings are shown beside each city.
+            Missing Windsor 3-bedroom+ rent values remain NA.
+            <br><strong>Sources:</strong> CMHC Rental Market Survey (October 2025 median rents); Income Security
+            Advocacy Centre (July 2025 OW and ODSP rates).
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const COLORS = { OW: "#b9653e", ODSP: "#347b88" };
+            const HOUSEHOLDS = [
+                { key: "single", title: "Single", detail: "1-bedroom apartment" },
+                { key: "parent", title: "Single parent + 1 child", detail: "2-bedroom apartment" },
+                { key: "couple", title: "Couple + 2 children", detail: "3+ bedroom apartment" }
+            ];
+
+            const norm = value => String(value ?? "").toLowerCase().normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "").replace(/&/g, "and")
+                .replace(/[’']/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+
+            const number = value => {
+                if (value == null || String(value).trim() === "" || String(value).trim().toUpperCase() === "NA") return null;
+                const n = Number(String(value).replace(/[$,%\s,]/g, ""));
+                return Number.isFinite(n) ? n : null;
+            };
+
+            function householdKey(value) {
+                const s = norm(value);
+                if (s.includes("parent") || (s.includes("child") && !s.includes("couple"))) return "parent";
+                if (s.includes("couple") || s.includes("two children") || s.includes("2 children")) return "couple";
+                if (s.includes("single")) return "single";
+                return null;
+            }
+
+            function cityKey(value) {
+                const s = norm(value).replace(/\b(cma|ontario)\b/g, " ").replace(/\s+/g, " ").trim();
+                if (s.includes("thunder bay")) return "thunder bay";
+                if (s.includes("sudbury")) return "greater sudbury";
+                if (s.includes("ottawa")) return "ottawa gatineau";
+                if (s.includes("belleville")) return "belleville quinte west";
+                if (s.includes("st catharines") || s.includes("niagara")) return "st catharines niagara";
+                if (s.includes("kitchener") || s.includes("waterloo")) return "kitchener cambridge waterloo";
+                return s;
+            }
+
+            function cityLabel(value) {
+                const key = cityKey(value);
+                const aliases = {
+                    "thunder bay": "Thunder Bay",
+                    "greater sudbury": "Greater Sudbury",
+                    "ottawa gatineau": "Ottawa–Gatineau",
+                    "belleville quinte west": "Belleville–Quinte West",
+                    "st catharines niagara": "St. Catharines–Niagara",
+                    "kitchener cambridge waterloo": "Kitchener–Cambridge–Waterloo"
+                };
+                return aliases[key] || String(value).replace(/\s+CMA\s*$/i, "").trim();
+            }
+
+            function parseRows(raw) {
+                if (!raw.length) throw new Error("The CSV contains no data rows.");
+                const required = ["cma", "program", "household_type"];
+                const missing = required.filter(k => !(k in raw[0]));
+                if (missing.length) throw new Error(`Missing required column(s): ${missing.join(", ")}`);
+
+                return raw.map(d => {
+                    const rent = number(d.median_rent);
+                    const basic = number(d.basic_needs);
+                    const shelter = number(d.max_shelter);
+                    const benefit = number(d.monthly_benefit) ?? (basic != null && shelter != null ? basic + shelter : null);
+                    let burden = number(d.rent_burden_pct);
+                    if (burden == null && rent != null && benefit != null && benefit > 0) burden = rent / benefit * 100;
+                    return {
+                        year: String(d.year ?? "2025"),
+                        cma: String(d.cma ?? "").trim(),
+                        cityKey: cityKey(d.cma),
+                        label: cityLabel(d.cma),
+                        program: String(d.program ?? "").trim().toUpperCase(),
+                        household: householdKey(d.household_type),
+                        burden,
+                        reliability: String(d.reliability ?? "Not stated").trim() || "Not stated"
+                    };
+                }).filter(d => d.cma && ["OW", "ODSP"].includes(d.program) && d.household);
+            }
+
+            function prepare(rows) {
+                const data = rows.filter(d => !d.year || d.year.includes("2025"));
+                const grouped = d3.group(data, d => d.cityKey);
+                const cities = Array.from(grouped, ([key, records]) => {
+                    const ratings = [...new Set(records.map(d => d.reliability).filter(Boolean))];
+                    const allBurden = records.map(d => d.burden).filter(v => v != null);
+                    return {
+                        key,
+                        label: records[0].label,
+                        records,
+                        sortValue: d3.mean(allBurden),
+                        reliability: ratings.length ? ratings.join(" / ") : "Not stated"
+                    };
+                }).sort((a, b) => d3.descending(a.sortValue ?? -Infinity, b.sortValue ?? -Infinity) || d3.ascending(a.label, b.label));
+
+                const get = (city, household, program) => city.records.find(d => d.household === household && d.program === program) || null;
+                return { cities, get };
+            }
+
+            function draw(rows) {
+                const { cities, get } = prepare(rows);
+                if (!cities.length) throw new Error("No 2025 OW/ODSP rows with recognized household types were found.");
+
+                const allValues = rows.map(d => d.burden).filter(v => v != null);
+                const maxValue = d3.max(allValues) || 300;
+                const domainMax = Math.max(300, Math.ceil(maxValue / 50) * 50);
+
+                const panelWidth = 488;
+                const panelGap = 16;
+                const width = panelWidth * 3 + panelGap * 2;
+                const left = 126;
+                const right = 28;
+                const plotTop = 82;
+                const rowH = 28;
+                const plotBottom = plotTop + cities.length * rowH;
+                const height = plotBottom + 42;
+                const x = d3.scaleLinear().domain([0, domainMax]).range([left, panelWidth - right]);
+                const ticks = d3.range(0, domainMax + 1, 50);
+                const svg = d3.select("#chart").attr("viewBox", `0 0 ${width} ${height}`).attr("preserveAspectRatio", "xMinYMin meet");
+                svg.selectAll("*").remove();
+
+                HOUSEHOLDS.forEach((household, panelIndex) => {
+                    const panel = svg.append("g").attr("transform", `translate(${panelIndex * (panelWidth + panelGap)},0)`);
+                    panel.append("text").attr("x", 4).attr("y", 23).attr("font-size", 14).attr("font-weight", 750).attr("fill", "#263532").text(household.title);
+                    panel.append("text").attr("x", 4).attr("y", 41).attr("font-size", 10).attr("fill", "#74807a").text(household.detail);
+                    panel.append("text").attr("x", left).attr("y", 61).attr("font-size", 8.5).attr("font-weight", 800)
+                        .attr("letter-spacing", ".08em").attr("fill", "#73807a").text("RENT AS % OF MAXIMUM MONTHLY BENEFIT");
+
+                    panel.selectAll("line.grid").data(ticks).join("line")
+                        .attr("x1", d => x(d)).attr("x2", d => x(d))
+                        .attr("y1", plotTop - 4).attr("y2", plotBottom)
+                        .attr("stroke", d => d === 100 ? "#b16b4d" : "#e7ebe6")
+                        .attr("stroke-width", d => d === 100 ? 1.4 : 1)
+                        .attr("stroke-dasharray", d => d === 100 ? "4 4" : null);
+
+                    panel.append("g").attr("transform", `translate(0,${plotTop - 5})`)
+                        .call(d3.axisTop(x).tickValues(ticks).tickSize(0).tickFormat(d => `${d}%`))
+                        .call(g => g.select(".domain").remove())
+                        .call(g => g.selectAll("text").attr("font-size", 8).attr("fill", "#74807a").attr("dy", -3));
+
+                    cities.forEach((city, cityIndex) => {
+                        const y = plotTop + cityIndex * rowH;
+                        const row = panel.append("g");
+                        if (cityIndex % 2 === 0) row.append("rect").attr("x", 0).attr("y", y).attr("width", panelWidth).attr("height", rowH).attr("fill", "#f5f5ef");
+                        row.append("text").attr("x", 5).attr("y", y + 11).attr("font-size", 9.5).attr("font-weight", 700).attr("fill", "#34433f").text(city.label);
+                        row.append("text").attr("x", 5).attr("y", y + 22).attr("font-size", 7.4).attr("fill", "#86918b").text(`CMHC: ${city.reliability}`);
+
+                        ["OW", "ODSP"].forEach((program, i) => {
+                            const record = get(city, household.key, program);
+                            const value = record?.burden ?? null;
+                            if (value == null) return;
+                            const cy = y + (i === 0 ? 9 : 20);
+                            const cx = x(value);
+                            const anchorEnd = cx > panelWidth - right - 36;
+                            const labelX = anchorEnd ? cx - 7 : cx + 7;
+                            row.append("circle").attr("cx", cx).attr("cy", cy).attr("r", 4.1)
+                                .attr("fill", COLORS[program]).attr("stroke", "#fffefa").attr("stroke-width", 1.1);
+                            row.append("text").attr("x", labelX).attr("y", cy + 2.7)
+                                .attr("text-anchor", anchorEnd ? "end" : "start")
+                                .attr("font-size", 7.8).attr("font-weight", 750).attr("fill", COLORS[program])
+                                .text(`${Math.round(value)}%`);
+                        });
+
+                        const hasAny = ["OW", "ODSP"].some(p => get(city, household.key, p)?.burden != null);
+                        if (!hasAny) row.append("text").attr("x", panelWidth - right - 4).attr("y", y + 16)
+                            .attr("text-anchor", "end").attr("font-size", 8).attr("fill", "#939d97").text("NA");
+                    });
+
+                    panel.append("line").attr("x1", 0).attr("x2", panelWidth - 4).attr("y1", plotBottom).attr("y2", plotBottom).attr("stroke", "#dfe4de");
+                });
+
+                document.querySelector("#empty").style.display = "none";
+                document.querySelector("#loadState").classList.remove("error");
+                document.querySelector("#loadState").textContent = `${cities.length} cities · ${rows.length} usable rows`;
+            }
+
+            function loadError(error) {
+                const el = document.querySelector("#loadState");
+                el.classList.add("error");
+                el.textContent = error.message;
+                document.querySelector("#empty").style.display = "grid";
+                document.querySelector("#empty").textContent = "Could not load rent_benefit_2025.csv. Put it beside this HTML file and open the page through a local server.";
+            }
+
+            // Automatically loads the CSV from the same folder as this HTML file.
+            d3.csv("rent_benefit_2025.csv")
+                .then(data => draw(parseRows(data)))
+                .catch(error => loadError(new Error("Could not find or read rent_benefit_2025.csv. Make sure it is in the same folder and open this page through a local server.")));
+        })();
+    </script>
+</body>
+
+</html>

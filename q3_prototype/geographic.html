@@ -1,0 +1,441 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where is the rent burden worst? — Q3 geographic view</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<style>
+  :root {
+    --paper: #fbfaf6;
+    --panel: #fffefa;
+    --ink: #202a2a;
+    --muted: #687574;
+    --line: #dfe4de;
+    --ow: #b9653e;
+    --odsp: #347b88;
+    --teal: #47736d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 1720px; margin: 0 auto; padding: 28px clamp(16px, 2.5vw, 40px) 24px; }
+  header { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 18px; }
+  .eyebrow { color: var(--teal); font-size: 10px; font-weight: 850; letter-spacing: .16em; text-transform: uppercase; }
+  h1 { margin: 8px 0 7px; font: 500 clamp(30px, 3.2vw, 48px)/1 Georgia, "Times New Roman", serif; letter-spacing: -.04em; }
+  .subtitle { max-width: 850px; margin: 0; color: #586663; font-size: 13px; line-height: 1.5; }
+  #loadState { color: var(--muted); font-size: 10px; text-align: right; white-space: nowrap; }
+  #loadState.error { color: #a33e34; white-space: normal; max-width: 340px; }
+  .controls { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; margin: 22px 0 14px; }
+  .control-label { display: block; margin-bottom: 7px; color: #6d7974; font-size: 9px; font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
+  .household-buttons { display: flex; flex-wrap: wrap; gap: 7px; }
+  .household-btn { border: 1px solid #cbd4ce; background: transparent; color: #42514f; border-radius: 7px; padding: 9px 12px; font: inherit; font-size: 11px; font-weight: 750; cursor: pointer; }
+  .household-btn[aria-pressed="true"] { color: white; background: var(--ink); border-color: var(--ink); }
+  .household-btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+  .workspace { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(410px, .95fr); gap: 14px; align-items: stretch; }
+  .panel { min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 13px; overflow: hidden; }
+  .panel-head { padding: 17px 19px 10px; }
+  .panel-kicker { color: var(--teal); font-size: 9px; font-weight: 850; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 5px; }
+  h2 { margin: 0; font: 500 23px/1.1 Georgia, "Times New Roman", serif; letter-spacing: -.025em; }
+  .panel-sub { margin: 6px 0 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
+  .map-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 0 19px 9px; color: #65716c; font-size: 9px; }
+  .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-number { display: inline-grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: #293b37; color: white; font-size: 8px; font-weight: 800; }
+  .legend-boundary { width: 19px; height: 12px; border: 1px solid #c9d1c8; background: #edf0e9; border-radius: 2px; }
+  .map-wrap { padding: 0 7px 7px; }
+  #map { width: 100%; height: auto; display: block; }
+  .map-footer, .list-footer { border-top: 1px solid #e7ebe6; padding: 10px 18px 12px; color: #65716c; font-size: 9px; line-height: 1.5; }
+  .rank-head { display: grid; grid-template-columns: 1fr 75px 75px; gap: 8px; padding: 0 15px 7px 17px; color: #77827d; font-size: 8px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+  .rank-list { padding: 0 10px 8px; }
+  .rank-row { display: grid; grid-template-columns: 26px minmax(0, 1fr) 75px 75px; gap: 7px; align-items: center; min-height: 35px; padding: 4px 6px; border-top: 1px solid #edf0eb; }
+  .rank-row:first-child { border-top: 1px solid #e1e6df; }
+  .rank-no { display: grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; background: #293b37; color: white; font-size: 8px; font-weight: 850; }
+  .city-name { overflow: hidden; color: #34433f; font-size: 9.5px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+  .city-reliability { margin-top: 2px; color: #89938d; font-size: 7px; line-height: 1.2; }
+  .value { font-variant-numeric: tabular-nums; text-align: right; font-size: 10px; font-weight: 800; white-space: nowrap; }
+  .value.ow { color: var(--ow); }
+  .value.odsp { color: var(--odsp); }
+  .value.na { color: #9aa39d; font-weight: 600; }
+  .loading { min-height: 420px; display: grid; place-items: center; padding: 28px; color: var(--muted); font-size: 12px; text-align: center; }
+  .source-note { margin-top: 12px; padding: 10px 13px; border-left: 2px solid #e5c36d; color: #64716c; background: rgba(255,254,250,.55); font-size: 9px; line-height: 1.55; }
+  .source-note strong { color: #394843; }
+  .tooltip { position: fixed; z-index: 20; max-width: 260px; padding: 9px 11px; border-radius: 7px; background: #1f2c29; color: #f8f8f1; font-size: 10px; line-height: 1.5; pointer-events: none; opacity: 0; box-shadow: 0 6px 20px rgba(0,0,0,.16); }
+  .tooltip strong { color: white; font-size: 11px; }
+  .map-city-marker { cursor: default; }
+  .map-city-marker circle.marker { fill: #293b37; stroke: #fffefa; stroke-width: 2; }
+  .map-city-marker text { fill: white; text-anchor: middle; dominant-baseline: central; font-size: 8px; font-weight: 850; pointer-events: none; }
+  .map-city-marker:focus circle.marker, .map-city-marker:hover circle.marker { stroke: #e5c36d; stroke-width: 3; }
+  @media (max-width: 1120px) { .workspace { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 620px) {
+    .page { padding: 20px 11px; }
+    header { align-items: flex-start; flex-direction: column; }
+    #loadState { text-align: left; white-space: normal; }
+    .rank-head, .rank-row { grid-template-columns: 25px minmax(0, 1fr) 60px 60px; gap: 4px; }
+    .rank-head { padding-left: 12px; padding-right: 12px; }
+    .rank-list { padding-left: 6px; padding-right: 6px; }
+    .rank-row { padding-left: 4px; padding-right: 4px; }
+  }
+  @media print {
+    .page { max-width: none; padding: 8px; }
+    .controls { margin-top: 10px; }
+    .household-btn { border-color: #aaa; }
+    body { background: white; }
+    .tooltip { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div>
+      <div class="eyebrow">Q3 · Ontario rental affordability · 2025</div>
+      <h1>Where is the rent burden worst?</h1>
+      <p class="subtitle">A geographic view of rent as a share of the maximum monthly OW or ODSP benefit. Numbered markers link each CMA to its ranked comparison.</p>
+    </div>
+    <div id="loadState">Loading rent_benefit_2025.csv and Ontario outline…</div>
+  </header>
+
+  <section class="controls" aria-label="Household scenario">
+    <div>
+      <span class="control-label">Household scenario</span>
+      <div class="household-buttons" role="group" aria-label="Choose household type">
+        <button class="household-btn" data-household="single" aria-pressed="true">Single · 1 bedroom</button>
+        <button class="household-btn" data-household="parent" aria-pressed="false">Single parent · 2 bedroom</button>
+        <button class="household-btn" data-household="couple" aria-pressed="false">Couple + 2 children · 3+ bedroom</button>
+      </div>
+    </div>
+  </section>
+
+  <main class="workspace">
+    <section class="panel map-panel">
+      <div class="panel-head">
+        <div class="panel-kicker">01 / Geography</div>
+        <h2>Where the burden is concentrated</h2>
+        <p class="panel-sub" id="mapSub">Ontario outline with geographically placed city markers. Markers are approximate city-centre anchors.</p>
+      </div>
+      <div class="map-legend">
+        <span class="legend-item"><i class="legend-number">1</i> Number matches the ranked list</span>
+        <span class="legend-item"><i class="legend-boundary"></i> Ontario outline</span>
+        <span class="legend-item"><i style="width:8px;height:8px;border-radius:50%;background:var(--ow);display:inline-block"></i> OW</span>
+        <span class="legend-item"><i style="width:8px;height:8px;border-radius:50%;background:var(--odsp);display:inline-block"></i> ODSP</span>
+      </div>
+      <div class="map-wrap">
+        <svg id="map" viewBox="0 0 1000 690" role="img" aria-label="Map of Ontario census metropolitan areas with numbered markers for rent burden"></svg>
+        <div id="mapEmpty" class="loading">Loading the geographic boundaries…</div>
+      </div>
+      <div class="map-footer">The Ontario outline provides geographic context. Numbered markers use approximate city-centre coordinates; they are not CMA boundary polygons, CMA centroids, or exact rental locations. Marker offsets in dense areas are connected back to their geographic anchor.</div>
+    </section>
+
+    <section class="panel ranking-panel">
+      <div class="panel-head">
+        <div class="panel-kicker">02 / Comparison</div>
+        <h2>Rent burden by city</h2>
+        <p class="panel-sub" id="rankSub">Ranked by the higher rent burden of OW or ODSP in each city.</p>
+      </div>
+      <div class="rank-head"><span>City / CMHC reliability</span><span style="text-align:right;color:var(--ow)">OW</span><span style="text-align:right;color:var(--odsp)">ODSP</span></div>
+      <div id="rankList" class="rank-list"></div>
+      <div class="list-footer">Rent burden = median rent ÷ maximum monthly benefit × 100. Above 100% means rent exceeds the entire maximum core benefit.</div>
+    </section>
+  </main>
+
+  <div class="source-note">
+    <strong>Sources:</strong> CMHC Rental Market Survey, October 2025 median rents; Income Security Advocacy Centre, July 2025 OW and ODSP rates. Geographic context: Ontario province outline from the Click That Hood Canada GeoJSON project. City markers use approximate city-centre coordinates. <strong>Note:</strong> Windsor's missing 3-bedroom+ rent observations remain NA. Maximum benefit includes basic needs plus maximum shelter and excludes the Ontario Child Benefit, tax credits and other assistance. CMHC reliability ratings are retained.
+  </div>
+</div>
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+(() => {
+  const CSV_FILE = "rent_benefit_2025.csv";
+  const ONTARIO_GEOJSON_URLS = [
+    "https://cdn.jsdelivr.net/gh/codeforgermany/click_that_hood@main/public/data/canada.geojson",
+    "https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/canada.geojson"
+  ];
+  const MAP_W = 1000, MAP_H = 690;
+  const state = { rows: [], geo: null, household: "single", projection: null, cityPoints: [] };
+  const colors = { OW: "#b9653e", ODSP: "#347b88" };
+  const tooltip = d3.select("#tooltip");
+
+  const norm = value => String(value ?? "").toLowerCase().normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "").replace(/&/g, "and")
+    .replace(/[’']/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+
+  const num = value => {
+    if (value == null || String(value).trim() === "" || String(value).trim().toUpperCase() === "NA") return null;
+    const n = Number(String(value).replace(/[$,%\s,]/g, ""));
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const fmtPct = value => value == null ? "NA" : `${d3.format(".0f")(value)}%`;
+
+  function cityKey(value) {
+    let key = norm(value).replace(/\b(cma|ontario)\b/g, " ").replace(/\s+/g, " ").trim();
+    if (key.includes("thunder bay")) return "thunder bay";
+    if (key.includes("sudbury")) return "greater sudbury";
+    if (key.includes("ottawa")) return "ottawa gatineau";
+    if (key.includes("belleville")) return "belleville quinte west";
+    if (key.includes("st catharines") || key.includes("niagara")) return "st catharines niagara";
+    if (key.includes("kitchener") || key.includes("waterloo")) return "kitchener cambridge waterloo";
+    return key;
+  }
+
+  function cityLabel(value) {
+    const key = cityKey(value);
+    const names = {
+      "thunder bay": "Thunder Bay",
+      "greater sudbury": "Greater Sudbury",
+      "ottawa gatineau": "Ottawa–Gatineau",
+      "belleville quinte west": "Belleville–Quinte West",
+      "st catharines niagara": "St. Catharines–Niagara",
+      "kitchener cambridge waterloo": "Kitchener–Cambridge–Waterloo"
+    };
+    return names[key] || String(value).replace(/\s+CMA\s*$/i, "").trim();
+  }
+
+  function householdKey(value) {
+    const s = norm(value);
+    if (s.includes("parent") || (s.includes("child") && !s.includes("couple"))) return "parent";
+    if (s.includes("couple") || s.includes("two children") || s.includes("2 children")) return "couple";
+    if (s.includes("single")) return "single";
+    return null;
+  }
+
+  function parseRows(raw) {
+    if (!raw.length) throw new Error("The CSV contains no data rows.");
+    const required = ["cma", "program", "household_type"];
+    const missing = required.filter(k => !(k in raw[0]));
+    if (missing.length) throw new Error(`Missing required column(s): ${missing.join(", ")}`);
+
+    return raw.map(d => {
+      const rent = num(d.median_rent);
+      const basic = num(d.basic_needs);
+      const shelter = num(d.max_shelter);
+      const benefit = num(d.monthly_benefit) ?? (basic != null && shelter != null ? basic + shelter : null);
+      let burden = num(d.rent_burden_pct);
+      if (burden == null && rent != null && benefit != null && benefit > 0) burden = rent / benefit * 100;
+      return {
+        year: String(d.year ?? "2025"),
+        cma: String(d.cma ?? "").trim(),
+        key: cityKey(d.cma),
+        program: String(d.program ?? "").trim().toUpperCase(),
+        household: householdKey(d.household_type),
+        burden,
+        reliability: String(d.reliability ?? "Not stated").trim() || "Not stated"
+      };
+    }).filter(d => d.cma && ["OW", "ODSP"].includes(d.program) && d.household);
+  }
+
+  // Ontario outline is static GeoJSON, mirrored on jsDelivr with GitHub Raw as fallback.
+  // We deliberately avoid the Statistics Canada ArcGIS query service because it has
+  // repeatedly returned HTTP 500 for the CMA geometry requests in the user's browser.
+  async function loadGeo() {
+    let lastError = null;
+    for (const url of ONTARIO_GEOJSON_URLS) {
+      try {
+        const geo = await d3.json(url);
+        const ontario = geo?.features?.find(f => norm(f.properties?.name) === "ontario");
+        if (!ontario) throw new Error("Ontario feature was not found in the province GeoJSON.");
+        return { type: "FeatureCollection", features: [ontario] };
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw new Error(`Could not load the Ontario outline from either static GeoJSON mirror. ${lastError?.message || "Check your internet connection."}`);
+  }
+
+  function groupCities(household) {
+    const selected = state.rows.filter(r => (!r.year || r.year.includes("2025")) && r.household === household);
+    const grouped = d3.group(selected, d => d.key);
+    return Array.from(grouped, ([key, records]) => {
+      const byProgram = Object.fromEntries(records.map(r => [r.program, r]));
+      const values = [byProgram.OW?.burden, byProgram.ODSP?.burden].filter(v => v != null);
+      const ratings = [...new Set(records.map(r => r.reliability).filter(Boolean))];
+      return {
+        key,
+        label: cityLabel(records[0].cma),
+        OW: byProgram.OW || null,
+        ODSP: byProgram.ODSP || null,
+        worst: values.length ? d3.max(values) : null,
+        reliability: ratings.length ? ratings.join(" / ") : "Not stated"
+      };
+    }).sort((a, b) => d3.descending(a.worst ?? -Infinity, b.worst ?? -Infinity) || d3.ascending(a.label, b.label));
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+  }
+
+  function showTooltip(event, city, rank) {
+    const html = `<strong>${escapeHtml(city.label)}</strong><br>Rank: ${rank}<br><span style="color:${colors.OW};font-weight:800">OW ${fmtPct(city.OW?.burden)}</span><br><span style="color:${colors.ODSP};font-weight:800">ODSP ${fmtPct(city.ODSP?.burden)}</span><br><span style="color:#bdc9c4">CMHC reliability: ${escapeHtml(city.reliability)}</span>`;
+    tooltip.html(html).style("opacity", 1);
+    const box = tooltip.node().getBoundingClientRect();
+    let x = event.clientX + 12, y = event.clientY + 12;
+    if (x + box.width + 12 > window.innerWidth) x = event.clientX - box.width - 12;
+    if (y + box.height + 12 > window.innerHeight) y = event.clientY - box.height - 12;
+    tooltip.style("left", `${Math.max(8, x)}px`).style("top", `${Math.max(8, y)}px`);
+  }
+  function hideTooltip() { tooltip.style("opacity", 0); }
+
+  // Approximate city-centre anchors (longitude, latitude) for Ontario CMAs.
+  // These are locator points, not CMA centroids or official CMA boundaries.
+  const CITY_ANCHORS = {
+    "thunder bay": [-89.2477, 48.3809],
+    "greater sudbury": [-80.9930, 46.4917],
+    "ottawa gatineau": [-75.6972, 45.4215],
+    "barrie": [-79.6903, 44.3894],
+    "kingston": [-76.4860, 44.2312],
+    "peterborough": [-78.3197, 44.3091],
+    "belleville quinte west": [-77.3832, 44.1628],
+    "oshawa": [-78.8658, 43.8971],
+    "toronto": [-79.3832, 43.6532],
+    "st catharines niagara": [-79.2469, 43.1594],
+    "hamilton": [-79.8711, 43.2557],
+    "guelph": [-80.2497, 43.5448],
+    "kitchener cambridge waterloo": [-80.4925, 43.4516],
+    "brantford": [-80.2644, 43.1394],
+    "london": [-81.2453, 42.9849],
+    "windsor": [-83.0364, 42.3149]
+  };
+
+  function drawBaseMap() {
+    const svg = d3.select("#map");
+    svg.selectAll("*").remove();
+    const province = state.geo.features[0];
+    const projection = d3.geoMercator().fitExtent([[28, 22], [MAP_W - 28, MAP_H - 24]], province);
+    const path = d3.geoPath(projection);
+    state.projection = projection;
+
+    svg.append("path").datum(province)
+      .attr("d", path).attr("fill", "#e8ede6")
+      .attr("stroke", "#c7d0c7").attr("stroke-width", 1.05);
+
+    svg.append("text").attr("x", MAP_W - 30).attr("y", MAP_H - 13)
+      .attr("text-anchor", "end").attr("fill", "#98a29b")
+      .attr("font-size", 8).attr("letter-spacing", ".12em").text("ONTARIO · CITY ANCHORS");
+
+    const csvKeys = new Set(state.rows.map(r => r.key));
+    state.cityPoints = Object.entries(CITY_ANCHORS)
+      .filter(([key]) => csvKeys.has(key))
+      .map(([key, coordinates]) => {
+        const point = projection(coordinates);
+        return { key, cx: point[0], cy: point[1], x: point[0], y: point[1] };
+      });
+
+    const missing = [...csvKeys].filter(key => !CITY_ANCHORS[key]);
+    if (missing.length) console.warn("No map anchor configured for these CSV CMAs:", missing);
+    if (!state.cityPoints.length) throw new Error("No city names in the CSV matched the map's Ontario city anchors.");
+    document.querySelector("#mapEmpty").style.display = "none";
+  }
+
+  function separateCloseMarkers(cities, rankByKey) {
+    const byKey = new Map(state.cityPoints.map(p => [p.key, p]));
+    const nodes = cities.map(city => {
+      const p = byKey.get(city.key);
+      return p ? { ...p, city, rank: rankByKey.get(city.key) } : null;
+    }).filter(Boolean);
+    const simulation = d3.forceSimulation(nodes)
+      .force("x", d3.forceX(d => d.cx).strength(.8))
+      .force("y", d3.forceY(d => d.cy).strength(.8))
+      .force("collide", d3.forceCollide(13).iterations(3))
+      .stop();
+    for (let i = 0; i < 180; i++) simulation.tick();
+    nodes.forEach(d => {
+      d.x = Math.max(14, Math.min(MAP_W - 14, d.x));
+      d.y = Math.max(14, Math.min(MAP_H - 14, d.y));
+    });
+    return nodes;
+  }
+
+  function renderMarkers(cities) {
+    const svg = d3.select("#map");
+    svg.selectAll(".marker-layer").remove();
+    const rankByKey = new Map(cities.map((city, i) => [city.key, i + 1]));
+    const nodes = separateCloseMarkers(cities, rankByKey);
+    const layer = svg.append("g").attr("class", "marker-layer");
+    const marker = layer.selectAll("g.map-city-marker").data(nodes, d => d.key).join("g")
+      .attr("class", "map-city-marker")
+      .attr("transform", d => `translate(${d.x},${d.y})`)
+      .attr("tabindex", 0)
+      .attr("role", "img")
+      .attr("aria-label", d => `${d.city.label}, rank ${d.rank}: OW ${fmtPct(d.city.OW?.burden)}, ODSP ${fmtPct(d.city.ODSP?.burden)}`)
+      .on("mouseenter", (event, d) => showTooltip(event, d.city, d.rank))
+      .on("mousemove", (event, d) => showTooltip(event, d.city, d.rank))
+      .on("mouseleave", hideTooltip)
+      .on("focus", (event, d) => {
+        const r = event.currentTarget.getBoundingClientRect();
+        showTooltip({ clientX: r.right, clientY: r.top }, d.city, d.rank);
+      })
+      .on("blur", hideTooltip);
+
+    marker.filter(d => Math.abs(d.x - d.cx) + Math.abs(d.y - d.cy) > 2).append("line")
+      .attr("x1", 0).attr("y1", 0).attr("x2", d => d.cx - d.x).attr("y2", d => d.cy - d.y)
+      .attr("stroke", "#65736d").attr("stroke-width", 1).attr("opacity", .75).lower();
+    marker.append("circle").attr("class", "marker").attr("r", 10.5);
+    marker.append("text").text(d => d.rank);
+  }
+
+  function renderRanking(cities) {
+    const list = document.querySelector("#rankList");
+    list.innerHTML = cities.map((city, i) => {
+      const ow = city.OW?.burden;
+      const odsp = city.ODSP?.burden;
+      return `<div class="rank-row">
+        <span class="rank-no">${String(i + 1).padStart(2, "0")}</span>
+        <div class="city-cell">
+          <div class="city-name" title="${escapeHtml(city.label)}">${escapeHtml(city.label)}</div>
+          <div class="city-reliability">CMHC reliability: ${escapeHtml(city.reliability)}</div>
+        </div>
+        <span class="value ow ${ow == null ? "na" : ""}">${fmtPct(ow)}</span>
+        <span class="value odsp ${odsp == null ? "na" : ""}">${fmtPct(odsp)}</span>
+      </div>`;
+    }).join("");
+  }
+
+  function update() {
+    const cities = groupCities(state.household);
+    const householdNames = {
+      single: "Single household · 1-bedroom rent",
+      parent: "Single parent with one child · 2-bedroom rent",
+      couple: "Couple with two children · 3+ bedroom rent"
+    };
+    document.querySelector("#mapSub").textContent = `${householdNames[state.household]}. Numbered markers show approximate city-centre locations; the list ranks cities by the higher of the two program burdens.`;
+    document.querySelector("#rankSub").textContent = `Ranked from highest to lowest by the worse of OW or ODSP. ${cities.length} cities in this household scenario.`;
+    document.querySelectorAll(".household-btn").forEach(btn => btn.setAttribute("aria-pressed", String(btn.dataset.household === state.household)));
+    renderMarkers(cities);
+    renderRanking(cities);
+  }
+
+  async function init() {
+    try {
+      const [csv, geo] = await Promise.all([d3.csv(CSV_FILE), loadGeo()]);
+      state.rows = parseRows(csv);
+      state.geo = geo;
+      drawBaseMap();
+      update();
+      const status = document.querySelector("#loadState");
+      status.classList.remove("error");
+      status.textContent = `${state.cityPoints.length} city locations mapped · ${state.rows.length} CSV rows loaded`;
+    } catch (error) {
+      console.error(error);
+      const status = document.querySelector("#loadState");
+      status.classList.add("error");
+      status.textContent = error.message || "Could not load the CSV or map boundaries.";
+      document.querySelector("#mapEmpty").textContent = `${status.textContent} Check that rent_benefit_2025.csv is beside this HTML file, open the folder through a local server, and confirm you have an internet connection for the static Ontario outline.`;
+    }
+  }
+
+  document.querySelectorAll(".household-btn").forEach(btn => btn.addEventListener("click", () => {
+    state.household = btn.dataset.household;
+    if (state.rows.length && state.cityPoints.length) update();
+  }));
+  init();
+})();
+</script>
+</body>
+</html>

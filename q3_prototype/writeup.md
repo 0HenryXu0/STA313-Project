@@ -1,0 +1,5 @@
+### Visualization 3: Where Is the Rent Burden Worst?
+
+Visualization 3 will use two views/charts to explore where rent places the greatest pressure on OW and ODSP benefits. For view one which is figure 3a uses dot plots, one for each household type. Each city has two dots representing OW and ODSP rent burdens, and a 100% reference line (the red dashed line) to highlight where median rent exceeds the entire monthly benefit. Also, the city rankings and CMHC reliability ratings provide additional context.
+
+For view two, which is figure 3b uses a geographic view of Ontario and uses numbered city markers linked to a ranked comparison of OW and ODSP burdens. Users can switch between household types to see how the ranking changes on the map. Together, the views allow users to identify both where rent burdens are highest and which households and benefit programs are most affected. The two views are connected and toggled on the top where you can choose dot plot, the default, and the map. The different household type dropdown should control both what the visualization will show.
